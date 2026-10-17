@@ -1,0 +1,454 @@
+
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Entdecke neue Profile</title>
+
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;color:white;background:#000}
+#bg{position:fixed;inset:0;width:100%;height:100%;object-fit:cover;z-index:-2}
+#shade{position:fixed;inset:0;background:#0006;z-index:-1}
+main{min-height:100vh;min-height:100svh;display:flex;align-items:center;justify-content:center;padding:18px}
+.card{width:100%;max-width:380px;padding:25px 20px;border-radius:16px;background:#1119;border:1px solid #ffffff40;backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px);text-align:center}
+.progress{height:5px;background:#ffffff35;border-radius:10px;overflow:hidden;margin-bottom:22px}
+#bar{height:100%;width:0;background:#ff3978;transition:width .3s}
+#percent{font-size:12px;color:#ff9bb9;margin-bottom:8px}
+h2{font-size:23px;margin:8px 0 20px}
+.answers{display:grid;gap:10px}
+button{width:100%;padding:14px;border:1px solid #ffffff60;border-radius:9px;background:#ffffff15;color:white;font-size:15px;cursor:pointer}
+button:hover{background:#ff397866}
+#next{margin-top:15px;background:#ff3978;border:0;font-weight:bold}
+button:disabled{opacity:.45;cursor:not-allowed}
+#loading{display:none}
+.spinner{width:34px;height:34px;margin:20px auto;border:4px solid #ffffff40;border-top-color:#ff3978;border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+#offer{display:none;margin-top:15px;background:#ff3978;color:white;text-decoration:none;padding:14px;border-radius:9px;font-weight:bold}
+.small{font-size:11px;color:#ffffffc9;margin-top:16px}
+</style>
+</head>
+
+<body>
+
+<video id="bg" autoplay muted loop playsinline>
+  <source src="https://files.catbox.moe/650nxe.mp4" type="video/mp4">
+</video>
+
+<div id="shade"></div>
+
+<main>
+<section class="card">
+
+  <div id="quiz">
+    <div id="percent">Fortschritt: 0 %</div>
+    <div class="progress"><div id="bar"></div></div>
+    <div id="question"></div>
+    <div class="answers" id="answers"></div>
+    <button id="next" disabled>Weiter →</button>
+    <p class="small">Du musst mindestens 18 Jahre alt sein, um fortzufahren.</p>
+  </div>
+
+  <div id="loading">
+    <h2 id="status">Wird geladen...</h2>
+    <div class="spinner"></div>
+    <p id="loadingText">Bitte warte einen Moment.</p>
+    <a id="offer" href="#" rel="nofollow sponsored">Jetzt weiter →</a>
+  </div>
+
+</section>
+</main>
+
+<script>
+const LINKS = {
+  frauen: "https://le2pmr8.lightheartedtrust.org/mpr2g3v",
+  whatsapp: "https://le2pmr8.lightheartedtrust.org/mpr2g3v",
+  videoanrufe: "https://le2pmr8.lightheartedtrust.org/mpr2g3v"
+};
+
+const MESSAGES = {
+  frauen: "Klicke auf den Button, um Frauen kennenzulernen!",
+  whatsapp: "Klicke hier, um WhatsApp-Gruppen zu entdecken!",
+  videoanrufe: "Klicke auf den Button, um Frauen für kostenlose Videoanrufe zu finden!"
+};
+
+const questions = [
+  {
+    title: "Bist du 18 Jahre oder älter?",
+    options: [
+      {text: "Ja, ich bin mindestens 18 Jahre alt", value: "yes"},
+      {text: "Nein", value: "no"}
+    ]
+  },
+  {
+    title: "Was möchtest du entdecken?",
+    options: [
+      {text: "Frauen kennenlernen", value: "frauen"},
+      {text: "WhatsApp-Gruppen", value: "whatsapp"},
+      {text: "Kostenlose Videoanrufe", value: "videoanrufe"}
+    ]
+  },
+  {
+    title: "Möchtest du fortfahren?",
+    options: [
+      {text: "Ja, weiter", value: "yes"},
+      {text: "Jetzt nicht", value: "no"}
+    ]
+  }
+];
+
+let step = 0;
+let selected = null;
+let destination = "";
+let chosenCategory = "";
+
+const question = document.getElementById("question");
+const answers = document.getElementById("answers");
+const next = document.getElementById("next");
+const bar = document.getElementById("bar");
+const percent = document.getElementById("percent");
+
+function render() {
+  selected = null;
+  next.disabled = true;
+  question.innerHTML = "";
+
+  const heading = document.createElement("h2");
+  heading.textContent = questions[step].title;
+  question.appendChild(heading);
+
+  answers.innerHTML = "";
+
+  questions[step].options.forEach(option => {
+    const btn = document.createElement("button");
+    btn.textContent = option.text;
+
+    btn.onclick = () => {
+      selected = option.value;
+
+      [...answers.children].forEach(b => {
+        b.style.background = "#ffffff15";
+      });
+
+      btn.style.background = "#ff397899";
+      next.disabled = false;
+
+      if (step === 1) {
+        chosenCategory = selected;
+        destination = LINKS[chosenCategory];
+      }
+
+      const p = Math.round(((step + 1) / questions.length) * 100);
+      bar.style.width = p + "%";
+      percent.textContent = "Fortschritt: " + p + " %";
+    };
+
+    answers.appendChild(btn);
+  });
+
+  const p = Math.round((step / questions.length) * 100);
+  bar.style.width = p + "%";
+  percent.textContent = "Fortschritt: " + p + " %";
+
+  next.textContent =
+    step === questions.length - 1 ? "Abschließen →" : "Weiter →";
+}
+
+next.onclick = () => {
+  if (selected === null) return;
+
+  if (step === 0 && selected !== "yes") {
+    alert("Du musst mindestens 18 Jahre alt sein, um fortzufahren.");
+    return;
+  }
+
+  if (step === 2 && selected !== "yes") {
+    alert("Du hast dich entschieden, nicht fortzufahren.");
+    return;
+  }
+
+  if (step < questions.length - 1) {
+    step++;
+    render();
+    return;
+  }
+
+  document.getElementById("quiz").style.display = "none";
+  document.getElementById("loading").style.display = "block";
+
+  bar.style.width = "100%";
+  percent.textContent = "Fortschritt: 100 %";
+
+  setTimeout(() => {
+    document.getElementById("status").textContent = "Fertig!";
+
+    document.querySelector(".spinner").style.display = "none";
+
+    document.getElementById("loadingText").textContent =
+      MESSAGES[chosenCategory];
+
+    const offer = document.getElementById("offer");
+    offer.href = destination;
+    offer.style.display = "block";
+  }, 1500);
+};
+
+render();
+</script>
+
+</body>
+<style>* {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 10px;
+            color: #ffffff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+            position: relative;
+            background-color: #0a050f;
+        }
+        
+        /* Contenedor del video de fondo sin resplandores rojos */
+        .video-background-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            overflow: hidden;
+        }
+        
+        /* Capa oscura superpuesta estándar (sin tinte rojo) para legibilidad del texto */
+        .video-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(rgba(10, 5, 15, 0.65), rgba(10, 5, 15, 0.65));
+            z-index: 1;
+        }
+
+        /* Indicador .live de rojo */
+        .live-indicator {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 0, 51, 0.9);
+            color: #ffffff;
+            font-size: 13px;
+            font-weight: 800;
+            padding: 6px 12px;
+            border-radius: 6px;
+            letter-spacing: 1px;
+            z-index: 2;
+            text-transform: uppercase;
+            box-shadow: 0 0 15px rgba(255, 0, 51, 0.6);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            animation: pulseLive 1.5s infinite ease-in-out;
+        }
+
+        .live-indicator::before {
+            content: '';
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background-color: #ffffff;
+            border-radius: 50%;
+        }
+
+        @keyframes pulseLive {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        /* El video real con la animación de zoom */
+        .video-background-container video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            animation: zoomBackground 16s infinite ease-in-out;
+        }
+
+        @keyframes zoomBackground {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.12);
+            }
+        }
+
+        /* Tarjeta base (Estilo móvil original intacto) */
+        .container {
+            width: 100%;
+            max-width: 420px;
+            background: rgba(18, 12, 24, 0.18);
+            backdrop-filter: blur(3px); 
+            -webkit-backdrop-filter: blur(8px);
+            padding: 35px 25px;
+            border-radius: 24px;
+            box-shadow: 0 15px 35px rgba(255, 20, 147, 0.15), 0 5px 15px rgba(0,0,0,0.5);
+            text-align: center;
+            border: 1px solid rgba(255, 45, 120, 0.25);
+            position: relative;
+            z-index: 2;
+        }
+        h1 { 
+            font-size: 24px; 
+            margin-bottom: 15px; 
+            color: #ffffff;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            background: linear-gradient(45deg, #ff2d78, #ff6b4a);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        p { 
+            font-size: 16px; 
+            line-height: 1.5; 
+            color: #e0d5ea; 
+            margin-bottom: 25px; 
+            font-weight: 400; 
+        }
+
+        /* Manejo de los pasos del cuestionario */
+        .quiz-step { display: none; }
+        .active { display: block; }
+        
+        /* Botones de las preguntas */
+        button.option {
+            display: block;
+            width: 100%;
+            padding: 16px;
+            margin: 12px 0;
+            background: rgba(255, 255, 255, 0.07);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: #ffffff;
+            border-radius: 14px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.25s ease;
+        }
+        button.option:hover { 
+            border-color: #ff2d78; 
+            background: rgba(255, 45, 120, 0.15);
+            color: #ff4088;
+            box-shadow: 0 0 10px rgba(255, 45, 120, 0.2);
+        }
+        button.option:active { transform: scale(0.98); }
+        
+        /* Botón de acción principal con animación de pulso suave */
+        button.cta {
+            background: linear-gradient(135deg, #ff0055 0%, #ff5500 100%);
+            color: #ffffff;
+            border: none;
+            padding: 18px;
+            font-size: 18px;
+            font-weight: bold;
+            border-radius: 14px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 15px;
+            letter-spacing: 0.5px;
+            box-shadow: 0 6px 20px rgba(255, 0, 85, 0.4);
+            transition: all 0.3s ease;
+            animation: pulseButton 2.5s infinite ease-in-out;
+        }
+        
+        @keyframes pulseButton {
+            0%, 100% {
+                transform: scale(1);
+                box-shadow: 0 6px 20px rgba(255, 0, 85, 0.4);
+            }
+            50% {
+                transform: scale(1.04);
+                box-shadow: 0 10px 28px rgba(255, 0, 85, 0.65);
+            }
+        }
+
+        button.cta:hover { 
+            background: linear-gradient(135deg, #e6004c 0%, #dd4400 100%);
+            box-shadow: 0 8px 25px rgba(255, 0, 85, 0.5);
+            transform: translateY(-1px) scale(1.02);
+            animation-play-state: paused;
+        }
+        button.cta:active {
+            transform: translateY(1px) scale(0.98);
+        }
+        
+        /* Footer con restricción de edad resaltada */
+        .footer { 
+            margin-top: 30px; 
+            font-size: 11px; 
+            color: #ff4088; 
+            border-top: 1px solid rgba(255, 45, 120, 0.15); 
+            padding-top: 15px; 
+            font-weight: 700; 
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        /* Remarcado de rojo para el texto de advertencia */
+        .footer-warning {
+            display: inline-block;
+            margin-top: 12px;
+            color: #F7DD59;
+            font-weight: 600;
+            text-transform: none;
+            letter-spacing: normal;
+            border: 2px solid #ff0033; /* Borde rojo vivo */
+            background: rgba(255, 0, 51, 0.15); /* Fondo rojo muy traslúcido para destacar */
+            padding: 10px 14px;
+            border-radius: 10px;
+            line-height: 1.4;
+        }
+
+        /* MODIFICACIÓN: Estilos exclusivos para Versión Escritorio (Pantallas mayores a 768px) */
+        @media (min-width: 769px) {
+            .container {
+                max-width: 580px; /* Aumenta el ancho de la tarjeta */
+                padding: 50px 40px; /* Más espacio interno */
+                border-radius: 32px; /* Bordes ligeramente más amplios y estilizados */
+            }
+            h1 {
+                font-size: 32px; /* Título más grande acorde al nuevo tamaño */
+                margin-bottom: 20px;
+            }
+            p {
+                font-size: 20px; /* Textos descriptivos más grandes */
+                margin-bottom: 35px;
+            }
+            button.option {
+                font-size: 19px; /* Botones de opciones más cómodos en pc */
+                padding: 20px;
+                margin: 16px 0;
+            }
+            button.cta {
+                font-size: 22px; /* Botón de acción principal proporcional */
+                padding: 22px;
+                margin-top: 25px;
+            }
+            .footer {
+                font-size: 13px;
+                margin-top: 40px;
+                padding-top: 20px;
+            }
+            .footer-warning {
+                font-size: 14px;
+                padding: 12px 18px;
+                margin-top: 16px;
+            }
+        }/*Here write your styles*/</style><script>/*Here write your javascript code*/</script></html>
